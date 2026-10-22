@@ -1,0 +1,81 @@
+# Canvix v0.3.0 Gap Analysis — Canvix v0.2.0 vs live Canva (2026-09-03 audit)
+
+> Source: `research/CANVA-V03-RESEARCH.md` (fresh audit) + code inspection of `src/`.
+> Ranked by visual-parity impact. Each gap lists the exact Canva reference values and
+> the Canvix change required. Status column = implemented in v0.3.0.
+
+## Tier 1 — Selection & interaction (highest visibility)
+
+| # | Gap | Canva (measured) | Canvix v0.2 | v0.3 action | Status |
+|---|---|---|---|---|---|
+| 1 | Selection transformer colors | border `#7630D7` 2px solid; white circle handles ~10px | cyan `#00C4CC`, generic anchors | re-skin Transformer: purple border, circle anchors, rotation snapping | ✅ |
+| 2 | Alignment guides | `#9954FF` 2px lines | guides pink `#FF33AA` 1px | recolor + 2px + snap thresholds | ✅ |
+| 3 | Contextual toolbar placement | replaces TOPBAR contents when selected (885×40, 32px buttons r10) | floating centered pill | move toolbar INTO topbar row | ✅ |
+| 4 | Right-click context menu | 244px, items 232×32, fs 13.33, r10, shortcuts right-aligned | none | element + page variants | ✅ |
+| 5 | Group / ungroup | Ctrl+G / Ctrl+Shift+G | none | `group` element type + ops | ✅ |
+| 6 | Multi-select | shift-click, marquee, unified purple box | shift-click only | marquee drag-select on empty canvas | ✅ |
+| 7 | Zoom menu | 128px listbox, 40px items + Fit/Fill | +/- only | dropdown + Fit + Fill + presets | ✅ |
+
+## Tier 2 — Panels & popovers
+
+| # | Gap | Canva | v0.3 action | Status |
+|---|---|---|---|---|
+| 8 | Color menu | search, spectrum + eyedropper + current, Brand Kit, 4×7 solids, gradients | Canva-style ColorMenu component | ✅ |
+| 9 | Text effects panel | 10 effects 3-col grid | restructured grid + Glow/Outline/Background/Splice added | ✅ |
+| 10 | Position popover | 2×2 arrange + 6 align + W/H/Ratio/X/Y/Rotate | exact layout | ✅ |
+| 11 | Spacing popover | letter/line spacing sliders + inputs | popover with styled sliders | ✅ |
+| 12 | Transparency popover | purple slider, white handle | popover slider | ✅ |
+| 13 | Font dropdown | search + pills + preview rows | custom FontDropdown | ✅ |
+| 14 | Dialog radius | 32px | 28px on all dialogs | ✅ |
+
+## Tier 3 — Editor capabilities
+
+| # | Gap | v0.3 action | Status |
+|---|---|---|---|
+| 15 | Text toolbar completeness | full set: B/I/U/S/Aa/align/spacing/transparency/effects/position | ✅ |
+| 16 | Lock/hide interactions | context menu + Ctrl+L + lock skips selection | ✅ |
+| 17 | Layer ordering UI | position tiles + ]/[ shortcuts | ✅ |
+| 18 | Shape library | polygons, 11 new graphics, search | ✅ |
+| 19 | Image handling | adjustments (brightness/contrast/saturation), flips, replace, set-as-background, drag-drop | ✅ |
+| 20 | Templates browsing | search, category chips, recommended, preview modal, apply | ✅ |
+| 21 | Brand kit | palettes, logos, apply-brand-style | ✅ |
+| 22 | Apps | registry + charts/QR/icons/palette/lorem/stickers | ✅ |
+| 23 | Dashboard | account menu, help modal, skeletons | ✅ |
+| 24 | Toasts/tooltips | toast on key actions, rail tooltips | ✅ |
+| 25 | Mobile contextual bar | bottom action bar on selection | ✅ |
+
+## Remaining gaps — closed by v0.3.1
+
+| Gap (from v0.3.0 audit) | v0.3.1 resolution | Status |
+|---|---|---|
+| Layer-name editing | double-click rename in Tools ▸ Layers (name persists on `BaseElement`) | ✅ |
+| Rulers & manual guides | 22px rulers (Shift+R / File menu), drag-out guides, snap-to-guide, clear-guides menu | ✅ |
+| Image crop UI | Crop dialog: handle drag + draw-new-region + aspect presets + thirds overlay | ✅ |
+| Version history | File → Version history: labelled local snapshots, undo-able restore, Ctrl+Alt+S | ✅ |
+| Group transform rotation | double-rotation fixed; ungroup orbits children around group origin | ✅ |
+| App/chart tile clickability | whole card is role=button + keyboard support | ✅ |
+
+## Remaining gaps — closed by v0.3.2
+
+| Gap (from v0.4.x backlog) | v0.3.2 resolution | Status |
+|---|---|---|
+| Gradient fills for shapes & text | `fillGradient` (linear/radial, angle, from/to) on shapes + text; full gradient editor inside the colour menu | ✅ |
+| PDF export | jsPDF multi-page export from the Download dialog (client-side, no watermark) | ✅ |
+| Curated stock photo library | Photos rail tab + 42 AI-generated license-free photos bundled in `public/photos/` | ✅ |
+| Small font library (15) | 63 families, 5 categories incl. Mono, Canva-style search + pills | ✅ |
+| Design-scoped guides | guides carry `pageId`; snapping + clearing are page-scoped | ✅ |
+| No AI surface (Canva AI is 2026 flagship) | Magic Write + AI image generator apps via server routes | ✅ |
+| Template stagnation | 5 templates from Canva's official Design Trends 2026 | ✅ |
+
+## Remaining gaps (accepted for v0.4.x)
+- Justify alignment renders as left in Konva (Konva limitation) — kept in the UI for parity
+- Real-time collaboration & comments (need a backend presence channel)
+- Server-side version history (v0.3.1 stores snapshots in localStorage per design)
+- SVG export, video/MP4 export
+- Runtime photo *search* is tag-based over the bundled library (Canva searches millions of licensed photos)
+
+## Risk register (respected)
+- v0.2 features verified post-upgrade: text effects, freehand draw, charts, autosave, export, preview/share, mobile sheets — all E2E-green.
+- Text double-click editing overlay still aligns (verified in E2E 06/25).
+- Mobile layout keeps sheet panels + gains the contextual bottom bar.
+- Custom font dropdown performs fine with 15 fonts + category filter.

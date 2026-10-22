@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// A user design / project — the core artifact of Canvix.
+model Design {
+  id         String          @id @default(cuid())
+  name       String          @default("Untitled design")
+  width      Int             @default(1080)
+  height     Int             @default(1080)
+  // Structured document: { pages: PageData[], ... } — stored as native jsonb
+  pages      Json            @default("[]")
+  thumbnail  String?         // small dataURL preview
+  source     String          @default("blank") // blank | template:<id> | duplicate:<id> | resize:<id>
+  // soft delete (dashboard Trash) — null = live design
+  deletedAt  DateTime?
+  versions   DesignVersion[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+// Server-side version snapshots for a design (Canva "Version history").
+model DesignVersion {
+  id        String   @id @default(cuid())
+  designId  String
+  design    Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+  label     String   @default("Version")
+  name      String
+  width     Int
+  height    Int
+  pages     Json
+  createdAt DateTime @default(now())
+
+  @@index([designId, createdAt(sort: Desc)])
+}
+
+// Built-in starter templates rendered in the dashboard & editor.
+model Template {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  category  String // social | presentation | print | logo | thumbnail
+  width     Int
+  height    Int
+  pages     Json // structured document — same shape as Design.pages
+  accent    String   @default("#00C4CC") // card decoration
+  createdAt DateTime @default(now())
+}
+
+// ── v0.5.0: collaboration, comments & AI infrastructure ──────
+
+// Append-only operation log — the replication stream for live collaboration.
+// `id` is a global monotonic sequence: clients track their last seen seq and
+// replay from any offset after reconnecting (SSE `?since=<seq>`).
+model DesignEvent {
+  id        BigInt   @id @default(autoincrement())
+  designId  String
+  actorId   String // participant id (client-generated)
+  kind      String // op name — see research/COLLABORATION-ARCHITECTURE.md §3
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([designId, id(sort: Desc)])
+}
+
+// Live presence per participant per design (heartbeat-based).
+model Presence {
+  id        String   @id // = participant id
+  designId  String
+  name      String
+  color     String
+  cursor    Json? // { page: number, x: number, y: number, selection?: string[] }
+  lastSeen  DateTime @default(now()) @updatedAt
+
+  @@unique([designId, id])
+  @@index([designId, lastSeen])
+}
+
+// Canvas-anchored comment threads (author identity is the local participant).
+model Comment {
+  id          String    @id @default(cuid())
+  designId    String
+  pageId      String
+  x           Float // anchor in page coordinates (fraction of page size, 0..1)
+  y           Float
+  elementId   String? // optional element anchor — pin follows the element
+  authorId    String
+  authorName  String
+  authorColor String
+  body        String
+  parentId    String? // reply threading
+  resolved    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([designId, createdAt])
+  @@index([designId, resolved])
+}
+
+// Provider accounting + abuse telemetry for AI routes.
+model AIUsage {
+  id        String   @id @default(cuid())
+  feature   String // write | image | image-edit | translate | assistant | magic-layers | search
+  provider  String // zai | local
+  ok        Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
